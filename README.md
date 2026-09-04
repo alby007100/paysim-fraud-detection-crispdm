@@ -1,15 +1,15 @@
 PaySim Fraud Detection Using Feature Engineering and Random Forest
 
-Project Overview
+## Project Overview
 
-This project evaluates whether domain-driven feature engineering improves financial fraud detection using the PaySim mobile-money transaction dataset. The project follows CRISP-DM and compares four Random Forest configurations: baseline, PCA, engineered features, and engineered features with SMOTE.
+This project applies the CRISP-DM methodology to financial fraud detection using the PaySim mobile-money transaction dataset. A Random Forest classifier is used as the baseline model, and Recursive Feature Elimination (RFE) is applied to identify a smaller set of informative predictors.
 
-Research questions:
+The project compares the predictive performance of the baseline Random Forest with an RFE-based Random Forest while maintaining a reproducible workflow for data preparation, modeling, evaluation, and deployment.
 
-Which transaction characteristics are the most important predictors of fraudulent transactions?
+### Research Questions
 
-Does feature engineering improve Random Forest predictive performance?
-
+1. Which transaction characteristics are the most important predictors of fraudulent financial transactions?
+2. Can Recursive Feature Elimination reduce the number of predictors while maintaining strong Random Forest fraud-detection performance?
 Dataset Information
 
 PaySim contains 6,362,620 simulated transactions and 11 variables. The target is isFraud. Only 8,213 transactions (about 0.13%) are fraudulent, creating severe class imbalance.
@@ -28,11 +28,11 @@ Data Understanding — inspect structure, quality, distributions, transaction ty
 
 Data Preparation — remove identifiers, encode transaction type, engineer behavioral features, and split data.
 
-Modeling — train baseline, PCA, engineered-feature, and engineered+SMOTE Random Forest models.
+ **Modeling** — train a baseline Random Forest, apply Recursive Feature Elimination (RFE), and train a second Random Forest using the selected features.
 
-Evaluation — compare accuracy, precision, recall, F1-score, and ROC-AUC.
+ **Evaluation** — compare the baseline and RFE Random Forest models using accuracy, precision, recall, F1-score, ROC-AUC, and confusion matrices.
 
-Deployment — save the best model and document its intended scoring workflow.
+**Deployment** — save the trained RFE Random Forest model and selected features so they can be loaded for future transaction scoring.
 
 ## Repository Structure
 
@@ -123,6 +123,21 @@ Python 3.10+, pandas, NumPy, Matplotlib, scikit-learn, imbalanced-learn, joblib,
 
 
 ## Results and Insights
+
+The reproducible workflow compares two Random Forest configurations:
+
+- **Baseline Random Forest:** trained using the complete prepared feature set.
+- **RFE Random Forest:** trained using the eight predictors selected through Recursive Feature Elimination.
+
+Model performance is evaluated using accuracy, precision, recall, F1-score, ROC-AUC, and confusion matrices. Running `scripts/05_evaluation.py` generates the final comparison and saves it as:
+
+`outputs/evaluation_metrics.csv`
+
+RFE reduces the dimensionality of the model from the full predictor set to eight selected features, allowing the project to evaluate whether a more compact feature set can maintain strong fraud-detection performance.
+
+The selected predictors are saved to:
+
+`outputs/selected_features.txt`
 
 The four Random Forest configurations produced the following results:
 
