@@ -15,7 +15,8 @@ Dataset Information
 PaySim contains 6,362,620 simulated transactions and 11 variables. The target is isFraud. Only 8,213 transactions (about 0.13%) are fraudulent, creating severe class imbalance.
 
 Expected file:
-data/raw/PS_20174392719_1491204439457_log.csv
+
+'data/raw/Fraud_Detection_Dataset.csv'
 
 GitHub note: the full CSV exceeds GitHub's normal 100 MB single-file limit. For a public GitHub repository, use Git LFS. A public Google Drive/Colab folder is also acceptable if your instructor permits it.
 
@@ -33,12 +34,24 @@ Evaluation — compare accuracy, precision, recall, F1-score, and ROC-AUC.
 
 Deployment — save the best model and document its intended scoring workflow.
 
-Repository Structure
+## Repository Structure
 
+``` text
 paysim-fraud-detection-crispdm/
+│
 ├── data/
 │   ├── raw/
+│   │   └── README.md
 │   └── processed/
+│       └── README.md
+│
+├── notebooks/
+│   ├── DDS-7255 Assignment 5 (1).ipynb
+│   └── README.md
+│
+├── outputs/
+│   └── README.md
+│
 ├── scripts/
 │   ├── 01_business_understanding.py
 │   ├── 02_data_understanding.py
@@ -46,61 +59,78 @@ paysim-fraud-detection-crispdm/
 │   ├── 04_modeling.py
 │   ├── 05_evaluation.py
 │   └── 06_deployment.py
-├── notebooks/
-│   └── CRISP_DM_PaySim_Fraud_Detection.ipynb
-├── outputs/
-│   ├── figures/
-│   ├── metrics/
-│   └── models/
-├── requirements.txt
+│
 ├── .gitignore
+├── requirements.txt
 └── README.md
+```
 
-How to Run the Project
+## How to Run the Project
 
-git clone <YOUR-PUBLIC-REPOSITORY-URL>
+Clone the repository:
+
+```bash
+git clone <repository-url>
 cd paysim-fraud-detection-crispdm
+```
 
+Create a virtual environment:
+
+```bash
 python -m venv .venv
+```
 
-Windows:
+Activate the environment on Windows:
 
+```bash
 .venv\Scripts\activate
+```
 
-macOS/Linux:
+On macOS/Linux:
 
+```bash
 source .venv/bin/activate
+```
 
 Install dependencies:
 
+```bash
 pip install -r requirements.txt
+```
 
-Place the PaySim CSV in data/raw/, then run:
+Place the PaySim dataset in:
 
+```text
+data/raw/Fraud_Detection_Dataset.csv
+```
+
+Then run the CRISP-DM scripts in order:
+
+```bash
 python scripts/01_business_understanding.py
 python scripts/02_data_understanding.py
 python scripts/03_data_preparation.py
 python scripts/04_modeling.py
 python scripts/05_evaluation.py
 python scripts/06_deployment.py
+```
 
-You may also run the notebook in notebooks/.
+You may also run the original analysis notebook located in the `notebooks/` directory.
 
-Dependencies
+## Dependencies
 
 Python 3.10+, pandas, NumPy, Matplotlib, scikit-learn, imbalanced-learn, joblib, and Jupyter.
 
 
-Results and Insights
+## Results and Insights
 
-Model                      Accuracy  Precision   Recall   F1-score  ROC-AUC
+The four Random Forest configurations produced the following results:
 
-Baseline                   99.97%    97.65%     78.39%    86.97%   99.38%
+| Model | Accuracy | Precision | Recall | F1-score | ROC-AUC |
+|---|---:|---:|---:|---:|---:|
+| Baseline | 99.97% | 97.65% | 78.39% | 86.97% | 99.38% |
+| PCA | 99.93% | 95.26% | 45.28% | 61.39% | 90.22% |
+| Engineered Features | 99.9996% | 99.94% | 99.76% | 99.85% | 99.88% |
+| Engineered + SMOTE | 99.9990% | 99.45% | 99.76% | 99.61% | 99.91% |
 
-PCA                        99.93%    95.26%     45.28%    61.39%   90.22%
-
-Engineered Features       99.9996%    99.94%    99.76%    99.85%   99.88%
-
-Engineered + SMOTE        99.9990%    99.45%    99.76%    99.61%   99.91%
-
-Domain-driven features produced the best balance of precision, recall, and F1-score. PCA weakened fraud detection, while SMOTE added only marginal benefit after strong features had already been created.
+The engineered-feature model achieved the strongest overall balance of precision, recall, and F1-score. PCA substantially reduced fraud-detection performance, particularly recall. SMOTE maintained very high recall but provided only a marginal improvement after strong domain-driven features had already been created.
