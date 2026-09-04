@@ -6,7 +6,7 @@ This folder contains the raw and processed datasets used in the PaySim fraud det
 
 The original PaySim dataset should be stored in:
 
-'D:\PhD DS Courses\14_DDS-7255-Advanced Research Design in DS\Fraud_Detection_Dataset`
+`data/raw/Fraud_Detection_Dataset.csv
 
 ## Processed Data
 
