@@ -1,4 +1,5 @@
 import pandas as pd
+import joblib
 from pathlib import Path
 
 from sklearn.model_selection import train_test_split
@@ -12,6 +13,12 @@ from sklearn.feature_selection import RFE
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA_PATH = ROOT / "data" / "raw" / "Fraud_Detection_Dataset.csv"
+
+OUTPUT_DIR = ROOT / "outputs"
+MODEL_DIR = OUTPUT_DIR / "models"
+
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+MODEL_DIR.mkdir(parents=True, exist_ok=True)
 
 
 # --------------------------------------------------
@@ -48,7 +55,7 @@ df_fe["isLargeTransaction"] = (
 
 
 # --------------------------------------------------
-# Prepare Modeling Data
+# Prepare Modeling Dataset
 # --------------------------------------------------
 
 df_model = df_fe.drop(
@@ -97,36 +104,28 @@ baseline_rf.fit(
     y_train
 )
 
-print("\nBaseline Random Forest trained successfully.")
+print("\nBaseline Random Forest trained.")
 
 
 # --------------------------------------------------
-# Recursive Feature Elimination Sample
+# Create RFE Sample
 # --------------------------------------------------
 
-# Keep all fraud observations from the training set
 fraud_idx = y_train[y_train == 1].index
 
-# Randomly sample 200,000 non-fraud observations
 nonfraud_idx = y_train[y_train == 0].sample(
     n=200000,
     random_state=42
 ).index
 
-# Combine fraud and non-fraud observations
 rfe_idx = fraud_idx.union(nonfraud_idx)
 
 X_rfe = X_train.loc[rfe_idx]
 y_rfe = y_train.loc[rfe_idx]
 
-print("\nRFE sample shape:", X_rfe.shape)
-
-print("\nRFE sample class distribution:")
-print(y_rfe.value_counts())
-
 
 # --------------------------------------------------
-# Configure and Run RFE
+# Recursive Feature Elimination
 # --------------------------------------------------
 
 rfe_estimator = RandomForestClassifier(
@@ -147,41 +146,22 @@ rfe.fit(
     y_rfe
 )
 
-
-# --------------------------------------------------
-# Selected Features
-# --------------------------------------------------
-
 selected_features_rfe = (
     X_train.columns[rfe.support_].tolist()
 )
 
-print("\nNumber of selected features:",
-      len(selected_features_rfe))
-
-print("\nRFE Selected Features:")
+print("\nSelected RFE features:")
 
 for feature in selected_features_rfe:
     print("-", feature)
 
 
 # --------------------------------------------------
-# Prepare Reduced Dataset
+# Train RFE Random Forest
 # --------------------------------------------------
 
 X_train_rfe = X_train[selected_features_rfe]
 X_test_rfe = X_test[selected_features_rfe]
-
-print("\nBaseline features:",
-      X_train.shape[1])
-
-print("RFE features:",
-      X_train_rfe.shape[1])
-
-
-# --------------------------------------------------
-# Train RFE Random Forest
-# --------------------------------------------------
 
 rfe_rf = RandomForestClassifier(
     n_estimators=100,
@@ -194,4 +174,52 @@ rfe_rf.fit(
     y_train
 )
 
-print("\nRFE Random Forest trained successfully.")
+print("\nRFE Random Forest trained.")
+
+
+# --------------------------------------------------
+# Save Models and Supporting Objects
+# --------------------------------------------------
+
+joblib.dump(
+    baseline_rf,
+    MODEL_DIR / "baseline_random_forest.joblib"
+)
+
+joblib.dump(
+    rfe_rf,
+    MODEL_DIR / "rfe_random_forest.joblib"
+)
+
+joblib.dump(
+    X_test,
+    OUTPUT_DIR / "X_test.joblib"
+)
+
+joblib.dump(
+    X_test_rfe,
+    OUTPUT_DIR / "X_test_rfe.joblib"
+)
+
+joblib.dump(
+    y_test,
+    OUTPUT_DIR / "y_test.joblib"
+)
+
+joblib.dump(
+    selected_features_rfe,
+    OUTPUT_DIR / "selected_features_rfe.joblib"
+)
+
+
+# Save selected features as a readable text file
+with open(
+    OUTPUT_DIR / "selected_features.txt",
+    "w"
+) as file:
+
+    for feature in selected_features_rfe:
+        file.write(feature + "\n")
+
+
+print("\nModeling outputs saved successfully.")
