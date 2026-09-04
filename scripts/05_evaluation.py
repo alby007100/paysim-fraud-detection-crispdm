@@ -1,4 +1,7 @@
 import pandas as pd
+import joblib
+from pathlib import Path
+
 from sklearn.metrics import (
     accuracy_score,
     precision_score,
@@ -6,51 +9,77 @@ from sklearn.metrics import (
     f1_score,
     roc_auc_score,
     confusion_matrix,
-    classification_report
 )
+
+
+# --------------------------------------------------
+# Project Paths
+# --------------------------------------------------
+
+ROOT = Path(__file__).resolve().parents[1]
+
+OUTPUT_DIR = ROOT / "outputs"
+MODEL_DIR = OUTPUT_DIR / "models"
+
+
+# --------------------------------------------------
+# Load Models and Test Data
+# --------------------------------------------------
+
+baseline_rf = joblib.load(
+    MODEL_DIR / "baseline_random_forest.joblib"
+)
+
+rfe_rf = joblib.load(
+    MODEL_DIR / "rfe_random_forest.joblib"
+)
+
+X_test = joblib.load(
+    OUTPUT_DIR / "X_test.joblib"
+)
+
+X_test_rfe = joblib.load(
+    OUTPUT_DIR / "X_test_rfe.joblib"
+)
+
+y_test = joblib.load(
+    OUTPUT_DIR / "y_test.joblib"
+)
+
 
 # --------------------------------------------------
 # Evaluation Function
 # --------------------------------------------------
 
-def evaluate_model(model, X_test, y_test, model_name):
-    """
-    Evaluate a classification model using the main
-    performance metrics used in the assignment.
-    """
+def evaluate_model(model, X, y, model_name):
 
-    # Generate predictions
-    y_pred = model.predict(X_test)
+    predictions = model.predict(X)
+    probabilities = model.predict_proba(X)[:, 1]
 
-    # Generate fraud probabilities
-    y_prob = model.predict_proba(X_test)[:, 1]
-
-    # Calculate performance metrics
     metrics = {
-        "Accuracy": accuracy_score(y_test, y_pred),
-        "Precision": precision_score(y_test, y_pred),
-        "Recall": recall_score(y_test, y_pred),
-        "F1-Score": f1_score(y_test, y_pred),
-        "ROC-AUC": roc_auc_score(y_test, y_prob)
+        "Model": model_name,
+        "Accuracy": accuracy_score(y, predictions),
+        "Precision": precision_score(y, predictions),
+        "Recall": recall_score(y, predictions),
+        "F1-score": f1_score(y, predictions),
+        "ROC-AUC": roc_auc_score(y, probabilities),
     }
 
     print(f"\n{model_name}")
     print("-" * 50)
 
     for metric, value in metrics.items():
-        print(f"{metric}: {value:.4f}")
+        if metric != "Model":
+            print(f"{metric}: {value:.4f}")
 
     print("\nConfusion Matrix:")
-    print(confusion_matrix(y_test, y_pred))
-
-    print("\nClassification Report:")
-    print(classification_report(y_test, y_pred))
+    print(confusion_matrix(y, predictions))
 
     return metrics
 
 
 # --------------------------------------------------
-# Evaluate Baseline Random Forest
+# Evaluate Models
 # --------------------------------------------------
 
 baseline_metrics = evaluate_model(
@@ -59,11 +88,6 @@ baseline_metrics = evaluate_model(
     y_test,
     "Baseline Random Forest"
 )
-
-
-# --------------------------------------------------
-# Evaluate RFE Random Forest
-# --------------------------------------------------
 
 rfe_metrics = evaluate_model(
     rfe_rf,
@@ -74,15 +98,24 @@ rfe_metrics = evaluate_model(
 
 
 # --------------------------------------------------
-# Compare Model Performance
+# Save Evaluation Results
 # --------------------------------------------------
 
-comparison = pd.DataFrame({
-    "Baseline Random Forest": baseline_metrics,
-    "RFE Random Forest": rfe_metrics
-})
+results = pd.DataFrame([
+    baseline_metrics,
+    rfe_metrics
+])
 
-print("\nModel Performance Comparison")
-print("=" * 50)
+RESULTS_PATH = OUTPUT_DIR / "evaluation_metrics.csv"
 
-print(comparison)
+results.to_csv(
+    RESULTS_PATH,
+    index=False
+)
+
+print("\nEvaluation Summary")
+print(results)
+
+print(
+    f"\nEvaluation metrics saved to: {RESULTS_PATH}"
+)
